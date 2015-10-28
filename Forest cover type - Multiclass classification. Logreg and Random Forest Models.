@@ -1,0 +1,136 @@
+
+# coding: utf-8
+
+# # Importing libraries
+
+# In[1]:
+
+import numpy as np
+import pandas as pd
+from sklearn.linear_model import LogisticRegression
+from sklearn.cross_validation import train_test_split
+from sklearn.metrics import roc_curve,auc,confusion_matrix
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import label_binarize
+from sklearn.multiclass import OneVsRestClassifier
+from sklearn import svm, datasets
+import matplotlib.pyplot as plt 
+get_ipython().magic(u'matplotlib inline')
+
+
+# # Loading data and eliminating any all 0 rows or columns
+
+# In[2]:
+
+dataset = pd.read_csv("C:\Users\Ashok\Desktop\Machine Learning Exercise\covtype.data",header=None,delimiter=",")
+
+dataset=dataset.loc[:, (dataset != 0).any(axis=0)]
+dataset = np.array(dataset)
+#print dataset
+
+
+# # Slicing data into Features and Labels. Then train and test Data
+
+# In[3]:
+
+X = dataset [:,:53]
+#print X[1:100]
+print np.shape(X)
+
+Y = dataset[:,54]
+#print Y [1:100]
+print np.shape(Y)
+
+xtrain, xtest, ytrain, ytest = train_test_split(X, Y, test_size=0.2,train_size=0.8, random_state=0)
+print (np.shape(xtrain))
+print (np.shape(ytrain))
+print (np.shape(xtest))
+print (np.shape(ytest))
+
+
+# # Invoking logistic regression function and fitting training data
+
+# In[4]:
+
+model = LogisticRegression()
+model.fit(xtrain, ytrain)
+
+
+# In[5]:
+
+print model.coef_[0]
+print model.intercept_
+
+
+# In[6]:
+
+prediction_model = model.predict(xtest)
+#print prediction_model[1:100]
+print 'Score for train data(80%):', model.score(xtrain, ytrain)
+print 'Score for test data(20%):' ,model.score(xtest, ytest)
+
+
+# In[9]:
+
+probabilities = model.predict_proba(xtest)
+print probabilities[1:100]
+
+
+# # Random Forest classifier
+
+# In[10]:
+
+model_RF= RandomForestClassifier(n_estimators=50)
+model_RF.fit(xtrain, ytrain)
+print model_RF.score(xtrain, ytrain)
+print model_RF.score(xtest, ytest)
+
+
+# 
+
+# In[17]:
+
+prediction_model_RF = model_RF.predict(xtest)
+print prediction_model_RF[1:100]
+print model_RF.score(xtrain, ytrain)
+print model_RF.score(xtest, ytest)
+
+
+# In[18]:
+
+probabilities_RF = model_RF.predict_proba(xtest)
+#print probabilities_RF[1:100]
+
+
+# # Printing Confusion matrix for RF Classifier with and without normalization.
+
+# In[38]:
+
+cover_names = ["Spruce/Fir", "Lodgepole Pine", "Ponderosa Pine", "Cottonwood/Willow", "Aspen", "Douglas-fir", "Krummholz"]                          
+def plot_confusion_matrix(cm, title='Confusion matrix', cmap=plt.cm.Reds):
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(cover_names))
+    plt.xticks(tick_marks, cover_names, rotation=45)
+    plt.yticks(tick_marks, cover_names)
+    plt.tight_layout()
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+
+cm = confusion_matrix(ytest, prediction_model_RF)
+np.set_printoptions(precision=2)
+#print('Confusion matrix, without normalization')
+#print(cm)
+#plt.figure()
+#plot_confusion_matrix(cm)
+
+cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+print('Normalized confusion matrix')
+print(cm_normalized)
+plt.figure()
+plot_confusion_matrix(cm_normalized, title='Normalized confusion matrix')
+
+
+
+
